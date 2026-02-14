@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro-Type | Mohd Aquib Javed - Cover Letter Engine</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- jsPDF for Native Text PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind Config for Custom Colors -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Space Grotesk', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a',
+                        },
+                        slate: {
+                            850: '#1e293b',
+                            900: '#0f172a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* A4 Paper Simulation */
+        .a4-paper {
+            width: 210mm;
+            min-height: 297mm;
+            background: white;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+        
+        /* Template Variants */
+        .template-modern .cv-header { border-bottom: 3px solid #0f172a; }
+        .template-minimal .cv-header { border-bottom: 1px solid #e2e8f0; }
+        .template-bold .cv-header { background: #0f172a; color: white; margin: -25mm -25mm 30px -25mm; padding: 40px; width: calc(100% + 50mm); }
+        
+        /* Print Optimization */
+        @media print {
+            .no-print { display: none !important; }
+            .a4-paper { box-shadow: none; margin: 0; }
+        }
+        
+        /* Smooth Transitions */
+        .transition-all-300 { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        
+        /* Focus Ring Custom */
+        .focus-ring:focus { outline: none; ring: 2px; ring-color: #3b82f6; ring-offset: 2px; }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-900 font-sans antialiased h-screen overflow-hidden">
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-white/90 backdrop-blur-sm z-50 hidden items-center justify-center flex-col gap-4">
+        <div class="w-12 h-12 border-4 border-brand-100 border-t-brand-600 rounded-full animate-spin"></div>
+        <p class="text-slate-600 font-medium animate-pulse">Generating Native PDF...</p>
+    </div>
+
+    <!-- Main App Container -->
+    <div class="grid grid-cols-1 lg:grid-cols-[420px,1fr] h-full">
+        
+        <!-- Sidebar Editor -->
+        <aside class="bg-white/95 backdrop-blur border-r border-slate-200 flex flex-col h-full overflow-hidden">
+            
+            <!-- Header -->
+            <div class="p-6 border-b border-slate-100">
+                <div class="flex items-center gap-3 mb-1">
+                    <div class="w-8 h-8 bg-gradient-to-br from-brand-600 to-violet-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">AJ</div>
+                    <h1 class="font-display font-bold text-xl tracking-tight bg-gradient-to-r from-brand-600 to-violet-600 bg-clip-text text-transparent">PRO-TYPE</h1>
+                </div>
+                <p class="text-xs text-slate-500 font-medium uppercase tracking-wider">Cover Letter Engine v2.0</p>
+            </div>
+
+            <!-- Scrollable Form -->
+            <div class="flex-1 overflow-y-auto p-6 space-y-5">
+                
+                <!-- Template Selector -->
+                <div class="space-y-2">
+                    <label class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>
+                        Layout Style
+                    </label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button onclick="setTemplate('modern')" id="btn-modern" class="template-btn active px-3 py-2.5 text-xs font-semibold rounded-lg border-2 border-brand-600 bg-brand-50 text-brand-700 transition-all-300 hover:shadow-md">
+                            Modern
+                        </button>
+                        <button onclick="setTemplate('minimal')" id="btn-minimal" class="template-btn px-3 py-2.5 text-xs font-semibold rounded-lg border-2 border-slate-200 text-slate-600 hover:border-slate-300 transition-all-300">
+                            Minimal
+                        </button>
+                        <button onclick="setTemplate('bold')" id="btn-bold" class="template-btn px-3 py-2.5 text-xs font-semibold rounded-lg border-2 border-slate-200 text-slate-600 hover:border-slate-300 transition-all-300">
+                            Bold
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Personal Info -->
+                <div class="space-y-4">
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                            Full Name
+                        </label>
+                        <input type="text" id="nameInp" value="Mohd Aquib Javed" 
+                            class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:border-brand-500 focus:ring-4 focus:ring-brand-100 transition-all-300 placeholder-slate-400">
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                            Professional Title
+                        </label>
+                        <input type="text" id="roleInp" value="UI/UX & WordPress Designer" 
+                            class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:border-brand-500 focus:ring-4 focus:ring-brand-100 transition-all-300">
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            Location & Contact
+                        </label>
+                        <input type="text" id="contactInp" value="Barabanki, India • (+91) 9044542535 • aquibjaved.1989@gmail.com" 
+                            class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:border-brand-500 focus:ring-4 focus:ring-brand-100 transition-all-300">
+                    </div>
+                </div>
+
+                <!-- Content Editor -->
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <label class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            Letter Content
+                        </label>
+                        <button onclick="loadTemplate()" class="text-xs text-brand-600 hover:text-brand-700 font-semibold hover:underline">Load Default Template</button>
+                    </div>
+                    <textarea id="coverInput" placeholder="Write your cover letter here... Use - for bullet points" 
+                        class="w-full h-80 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm leading-relaxed focus:bg-white focus:border-brand-500 focus:ring-4 focus:ring-brand-100 transition-all-300 resize-none font-mono text-slate-700"></textarea>
+                    <p class="text-xs text-slate-400 mt-1">Tip: Use <code class="bg-slate-200 px-1 rounded">-</code> at start of line for bullet points</p>
+                </div>
+
+                <!-- Quick Stats (From CV) -->
+                <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                        Your CV Highlights
+                    </h3>
+                    <ul class="space-y-2 text-xs text-slate-600">
+                        <li class="flex items-start gap-2"><span class="text-brand-600 mt-0.5">▸</span> 3+ years UI/UX & WordPress</li>
+                        <li class="flex items-start gap-2"><span class="text-brand-600 mt-0.5">▸</span> 25% user engagement boost</li>
+                        <li class="flex items-start gap-2"><span class="text-brand-600 mt-0.5">▸</span> 40% load time reduction</li>
+                        <li class="flex items-start gap-2"><span class="text-brand-600 mt-0.5">▸</span> Figma, Framer, WordPress Expert</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Download Button -->
+            <div class="p-6 border-t border-slate-200 bg-slate-50/50">
+                <button id="downloadBtn" onclick="generatePDF()" 
+                    class="w-full bg-slate-900 hover:bg-brand-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl hover:shadow-brand-500/25 transform hover:-translate-y-0.5 active:translate-y-0 transition-all-300 flex items-center justify-center gap-3 group">
+                    <svg class="w-5 h-5 group-hover:animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <span>Export Native PDF</span>
+                </button>
+                <p class="text-center text-[10px] text-slate-400 mt-2">Real text • Selectable • ATS-friendly</p>
+            </div>
+        </aside>
+
+        <!-- Preview Pane -->
+        <main class="bg-slate-200 overflow-y-auto p-8 lg:p-12 flex flex-col items-center relative">
+            
+            <!-- Zoom Controls -->
+            <div class="fixed bottom-8 right-8 flex gap-2 bg-white p-2 rounded-xl shadow-xl border border-slate-200 z-40 no-print">
+                <button onclick="adjustZoom(-0.1)" class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-600 font-bold transition-colors">−</button>
+                <span id="zoomLevel" class="w-12 h-10 flex items-center justify-center text-sm font-semibold text-slate-700">100%</span>
+                <button onclick="adjustZoom(0.1)" class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-600 font-bold transition-colors">+</button>
+            </div>
+
+            <!-- A4 Paper Preview -->
+            <div id="pdfCapture" class="a4-paper template-modern p-[25mm] flex flex-col relative transition-transform duration-300 origin-top">
+                
+                <!-- Header -->
+                <header class="cv-header pb-6 mb-8 flex justify-between items-end">
+                    <div class="name-block">
+                        <h2 id="prevName" class="text-3xl font-display font-bold tracking-tight text-slate-900 uppercase leading-none">MOHD AQUIB JAVED</h2>
+                        <p id="prevRole" class="text-brand-600 font-semibold text-sm mt-2 tracking-wide">UI/UX & WordPress Designer</p>
+                    </div>
+                    <div id="prevContact" class="text-right text-xs text-slate-500 leading-relaxed font-medium">
+                        Barabanki, India<br>
+                        (+91) 9044542535<br>
+                        aquibjaved.1989@gmail.com
+                    </div>
+                </header>
+
+                <!-- Date -->
+                <span id="currentDate" class="text-sm font-semibold text-slate-500 mb-6 block font-sans"></span>
+
+                <!-- Body Content -->
+                <div id="contentPreview" class="cv-body flex-1 font-sans text-[15px] leading-relaxed text-slate-700"></div>
+
+                <!-- Footer -->
+                <footer class="cv-footer mt-auto pt-6 border-t border-slate-100 flex justify-center gap-4 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                    <span>aquibdesigner.framer.website</span>
+                    <span>•</span>
+                    <span>behance.net/aquibjaved</span>
+                </footer>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const { jsPDF } = window.jspdf;
+        let currentZoom = 1;
+        let currentTemplate = 'modern';
+        
+        // Default Cover Letter Template based on Aquib's CV
+        const defaultLetter = `Dear Hiring Manager,
+
+I am writing to express my enthusiastic interest in the UI/UX Designer position. As a UI/UX & WordPress Designer with 3+ years of experience delivering high-conversion digital products, I have consistently driven measurable results including a 25% boost in user engagement for SaaS and Healthcare sectors.
+
+Key Achievements:
+- Spearheaded UI/UX for 10+ high-impact projects at Branding 360neo, increasing user retention by 25%
+- Optimized site performance at DBUZZZ IT, reducing load times by 40% and improving SEO rankings by 15%
+- Engineered responsive WordPress sites and custom themes with focus on accessibility and conversion
+- Led design for Hospital Management Systems and Healthcare E-commerce platforms
+
+Technical Expertise:
+- Design: Figma, Adobe XD, Framer, Webflow, Design Systems
+- Development: WordPress, Elementor, WooCommerce, HTML/CSS, Bootstrap
+- UX: User Research, Wireframing, Prototyping, Usability Testing, A/B Testing
+
+I hold a Bachelor of Arts degree and certifications from Google (UX Design) and IBM (Bootstrap Development). My portfolio showcases responsive designs that balance aesthetic excellence with functional precision.
+
+I am particularly drawn to your commitment to user-centered innovation and would welcome the opportunity to discuss how my background in creating scalable design systems and high-performance web solutions aligns with your vision.
+
+Warm regards,
+
+Mohd Aquib Javed
+UI/UX & WordPress Designer
+(+91) 9044542535
+aquibjaved.1989@gmail.com
+aquibdesigner.framer.website`;
+
+        // Initialize
+        document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', { 
+            month: 'long', day: 'numeric', year: 'numeric' 
+        });
+        
+        document.getElementById('coverInput').value = defaultLetter;
+        
+        function loadTemplate() {
+            document.getElementById('coverInput').value = defaultLetter;
+            updatePreview();
+        }
+
+        function updatePreview() {
+            const name = document.getElementById('nameInp').value;
+            const role = document.getElementById('roleInp').value;
+            const contact = document.getElementById('contactInp').value;
+            const content = document.getElementById('coverInput').value;
+            
+            // Update header
+            document.getElementById('prevName').textContent = name.toUpperCase();
+            document.getElementById('prevRole').textContent = role;
+            document.getElementById('prevContact').innerHTML = contact.replace(/•/g, '<br>');
+            
+            // Format content with smart parsing
+            const formatted = content.split('\n').map(line => {
+                const trimmed = line.trim();
+                if (!trimmed) return '<div class="h-3"></div>';
+                
+                // Bullet points
+                if (/^[-•*]\s/.test(trimmed)) {
+                    return `<div class="flex items-start gap-3 my-2 ml-2"><span class="text-brand-600 font-bold mt-1">→</span><span class="font-medium text-slate-800">${trimmed.substring(2)}</span></div>`;
+                }
+                
+                // Headers (Key, Dear, etc)
+                if (/^(Dear|Key|Technical|I am|My|Warm|Best|Sincerely)/i.test(trimmed)) {
+                    if (/^(Warm|Best|Sincerely)/i.test(trimmed)) {
+                        return `<div class="mt-8 mb-2 font-bold text-slate-900">${trimmed}</div>`;
+                    }
+                    if (/^(Key|Technical)/i.test(trimmed)) {
+                        return `<div class="mt-6 mb-3 font-bold text-brand-600 text-sm uppercase tracking-wider">${trimmed}</div>`;
+                    }
+                    return `<div class="mb-3 font-semibold text-slate-900">${trimmed}</div>`;
+                }
+                
+                // Regular paragraph
+                return `<p class="mb-3 text-slate-700 leading-relaxed">${trimmed}</p>`;
+            }).join('');
+            
+            document.getElementById('contentPreview').innerHTML = formatted;
+        }
+
+        function setTemplate(template) {
+            currentTemplate = template;
+            
+            // Update buttons
+            document.querySelectorAll('.template-btn').forEach(btn => {
+                btn.classList.remove('active', 'border-brand-600', 'bg-brand-50', 'text-brand-700');
+                btn.classList.add('border-slate-200', 'text-slate-600');
+            });
+            
+            const activeBtn = document.getElementById(`btn-${template}`);
+            activeBtn.classList.remove('border-slate-200', 'text-slate-600');
+            activeBtn.classList.add('active', 'border-brand-600', 'bg-brand-50', 'text-brand-700');
+            
+            // Update preview class
+            const capture = document.getElementById('pdfCapture');
+            capture.className = `a4-paper p-[25mm] flex flex-col relative transition-transform duration-300 origin-top template-${template}`;
+            
+            // Template-specific styling adjustments
+            if (template === 'bold') {
+                document.getElementById('prevName').classList.add('text-white');
+                document.getElementById('prevRole').classList.add('text-slate-400');
+                document.getElementById('prevContact').classList.add('text-slate-400');
+            } else {
+                document.getElementById('prevName').classList.remove('text-white');
+                document.getElementById('prevRole').classList.remove('text-slate-400');
+                document.getElementById('prevContact').classList.remove('text-slate-400');
+            }
+        }
+
+        function adjustZoom(delta) {
+            currentZoom = Math.max(0.5, Math.min(1.3, currentZoom + delta));
+            document.getElementById('pdfCapture').style.transform = `scale(${currentZoom})`;
+            document.getElementById('zoomLevel').textContent = Math.round(currentZoom * 100) + '%';
+        }
+
+        // NATIVE TEXT PDF GENERATION - NO IMAGES!
+        async function generatePDF() {
+            const btn = document.getElementById('downloadBtn');
+            const overlay = document.getElementById('loadingOverlay');
+            
+            btn.disabled = true;
+            btn.innerHTML = `<svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Processing...`;
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+            
+            setTimeout(() => {
+                try {
+                    const pdf = new jsPDF('p', 'mm', 'a4');
+                    const pageWidth = 210;
+                    const margin = 25;
+                    const contentW = pageWidth - (margin * 2);
+                    let y = margin;
+                    
+                    // Colors
+                    const brand = [37, 99, 235];
+                    const dark = [15, 23, 42];
+                    const gray = [100, 116, 139];
+                    const body = [51, 65, 85];
+                    
+                    const name = document.getElementById('nameInp').value.toUpperCase();
+                    const role = document.getElementById('roleInp').value;
+                    const contacts = document.getElementById('contactInp').value.split('•').map(s => s.trim());
+                    const date = document.getElementById('currentDate').textContent;
+                    const lines = document.getElementById('coverInput').value.split('\n');
+                    
+                    // TEMPLATE RENDERING
+                    if (currentTemplate === 'bold') {
+                        // Dark header background
+                        pdf.setFillColor(15, 23, 42);
+                        pdf.rect(0, 0, pageWidth, 55, 'F');
+                        
+                        pdf.setTextColor(255, 255, 255);
+                        pdf.setFontSize(28);
+                        pdf.setFont('helvetica', 'bold');
+                        pdf.text(name, margin, 32);
+                        
+                        pdf.setTextColor(148, 163, 184);
+                        pdf.setFontSize(11);
+                        pdf.text(role, margin, 42);
+                        
+                        // Contact right
+                        pdf.setFontSize(9);
+                        let cy = 20;
+                        contacts.forEach(c => {
+                            pdf.text(c, pageWidth - margin, cy, { align: 'right' });
+                            cy += 5;
+                        });
+                        
+                        y = 65;
+                    } 
+                    else if (currentTemplate === 'minimal') {
+                        pdf.setTextColor(15, 23, 42);
+                        pdf.setFontSize(30);
+                        pdf.setFont('helvetica', 'normal');
+                        pdf.text(name, pageWidth/2, y + 10, { align: 'center' });
+                        
+                        pdf.setFontSize(10);
+                        pdf.setFont('helvetica', 'bold');
+                        pdf.text(role.toUpperCase(), pageWidth/2, y + 20, { align: 'center' });
+                        
+                        pdf.setFont('helvetica', 'normal');
+                        pdf.setTextColor(148, 163, 184);
+                        pdf.setFontSize(9);
+                        pdf.text(contacts.join(' • '), pageWidth/2, y + 28, { align: 'center' });
+                        
+                        pdf.setDrawColor(226, 232, 240);
+                        pdf.line(margin, y + 35, pageWidth - margin, y + 35);
+                        
+                        y += 50;
+                    }
+                    else {
+                        // Modern (default)
+                        pdf.setTextColor(15, 23, 42);
+                        pdf.setFontSize(26);
+                        pdf.setFont('helvetica', 'bold');
+                        pdf.text(name, margin, y);
+                        
+                        pdf.setTextColor(37, 99, 235);
+                        pdf.setFontSize(11);
+                        pdf.text(role, margin, y + 10);
+                        
+                        // Contact right
+                        pdf.setTextColor(100, 116, 139);
+                        pdf.setFontSize(9);
+                        pdf.setFont('helvetica', 'normal');
+                        let cy = y - 5;
+                        contacts.forEach(c => {
+                            pdf.text(c, pageWidth - margin, cy, { align: 'right' });
+                            cy += 5;
+                        });
+                        
+                        pdf.setDrawColor(15, 23, 42);
+                        pdf.setLineWidth(0.8);
+                        pdf.line(margin, y + 20, pageWidth - margin, y + 20);
+                        
+                        y += 32;
+                    }
+                    
+                    // Date
+                    pdf.setTextColor(100, 116, 139);
+                    pdf.setFontSize(10);
+                    pdf.text(date, margin, y);
+                    y += 12;
+                    
+                    // Content parsing
+                    pdf.setTextColor(51, 65, 85);
+                    pdf.setFontSize(11);
+                    pdf.setFont('helvetica', 'normal');
+                    pdf.setLineHeightFactor(1.6);
+                    
+                    lines.forEach(line => {
+                        const t = line.trim();
+                        if (!t) {
+                            y += 4;
+                            return;
+                        }
+                        
+                        // Page break
+                        if (y > 270) {
+                            pdf.addPage();
+                            y = margin;
+                        }
+                        
+                        // Bullet detection
+                        if (/^[-•*]\s/.test(t)) {
+                            const text = t.substring(2);
+                            pdf.setTextColor(37, 99, 235);
+                            pdf.setFont('helvetica', 'bold');
+                            pdf.text('→', margin, y);
+                            
+                            pdf.setTextColor(15, 23, 42);
+                            pdf.setFont('helvetica', 'normal');
+                            const split = pdf.splitTextToSize(text, contentW - 8);
+                            pdf.text(split, margin + 6, y);
+                            y += split.length * 5 + 2;
+                        }
+                        // Headers
+                        else if (/^(Dear|Key|Technical|I am writing)/i.test(t)) {
+                            const isKey = /^(Key|Technical)/i.test(t);
+                            pdf.setFont(isKey ? 'helvetica' : 'helvetica', isKey ? 'bold' : 'bold');
+                            pdf.setTextColor(isKey ? 37 : 15, isKey ? 99 : 23, isKey ? 235 : 42);
+                            if (isKey) y += 3;
+                            
+                            const split = pdf.splitTextToSize(t, contentW);
+                            pdf.text(split, margin, y);
+                            y += split.length * 5 + (isKey ? 4 : 6);
+                            pdf.setTextColor(51, 65, 85);
+                            pdf.setFont('helvetica', 'normal');
+                        }
+                        // Sign off
+                        else if (/^(Warm|Best|Sincerely|Regards)/i.test(t)) {
+                            y += 6;
+                            pdf.setFont('helvetica', 'bold');
+                            pdf.setTextColor(15, 23, 42);
+                            const split = pdf.splitTextToSize(t, contentW);
+                            pdf.text(split, margin, y);
+                            y += split.length * 5 + 3;
+                            pdf.setFont('helvetica', 'normal');
+                        }
+                        // Regular text
+                        else {
+                            pdf.setTextColor(51, 65, 85);
+                            const split = pdf.splitTextToSize(t, contentW);
+                            pdf.text(split, margin, y);
+                            y += split.length * 5 + 3;
+                        }
+                    });
+                    
+                    // Footer
+                    pdf.setDrawColor(241, 245, 249);
+                    pdf.setLineWidth(0.3);
+                    pdf.line(margin, 275, pageWidth - margin, 275);
+                    
+                    pdf.setTextColor(148, 163, 184);
+                    pdf.setFontSize(8);
+                    pdf.setFont('helvetica', 'bold');
+                    pdf.text('aquibdesigner.framer.website • behance.net/aquibjaved', pageWidth/2, 282, { align: 'center' });
+                    
+                    // Save
+                    pdf.save(`CoverLetter_${name.replace(/\s+/g, '_')}_${currentTemplate}.pdf`);
+                    
+                } catch (err) {
+                    console.error(err);
+                    alert('Error: ' + err.message);
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><span>Export Native PDF</span>`;
+                    overlay.classList.add('hidden');
+                    overlay.classList.remove('flex');
+                }
+            }, 300);
+        }
+
+        // Event listeners
+        ['nameInp', 'roleInp', 'contactInp', 'coverInput'].forEach(id => {
+            document.getElementById(id).addEventListener('input', updatePreview);
+        });
+
+        // Initial render
+        updatePreview();
+    </script>
+</body>
+</html>
